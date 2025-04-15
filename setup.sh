@@ -9,7 +9,7 @@ echo -e "\033[1;32m         DIGITALVORTEX DNS Bypass          "
 echo -e "\033[1;34m===========================================\033[0m"
 
 # Ask for server mode or remove option
-echo -e "\033[1;36mServer shoma Iranian ast, Khareji ya mikhahid hazf konid?\033[0m"
+echo -e "\033[1;36mLotfan yeki az gozineh hay zir ra entekhab konid\033[0m"
 echo -e "\033[1;33m1) IRAN (Client)"
 echo -e "2) KHAREJ (Server - Sanaei Panel)"
 echo -e "3) Hazf (Remove Configuration)\033[0m"

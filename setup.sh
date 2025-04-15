@@ -37,8 +37,10 @@ if [ "$MODE" == "1" ]; then
     PRIVATE_KEY=$(cat /etc/wireguard/privatekey)
     PUBLIC_KEY=$(cat /etc/wireguard/publickey)
 
-    echo -e "\033[1;36mLotfan file config server KHAREJ ra paste konid:\033[0m"
-    read -p "Paste config in yeki line va ENTER bezanid: " SERVER_CONFIG
+    clear
+    
+    echo -e "\033[1;36mLotfan file config server KHAREJ ra paste konid va inter bezanid:\033[0m"
+    read -p : " SERVER_CONFIG
 
     echo "$SERVER_CONFIG" > /etc/wireguard/wg0.conf
 
@@ -57,5 +59,5 @@ if [ "$MODE" == "1" ]; then
     echo -e "\033[1;33mPublic Key Client (IRAN):\033[0m"
     echo "${PUBLIC_KEY}"
 else
-    echo -e "\033[1;31mAdad eshtebah vared shod! Do bare sa'y konid.\033[0m"
+    echo -e "\033[1;31mAdad eshtebah vared shod! Dobare sa'y konid.\033[0m"
 fi

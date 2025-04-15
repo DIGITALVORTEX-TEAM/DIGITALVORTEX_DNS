@@ -1,36 +1,43 @@
 #!/bin/bash
 
+# Clear terminal screen
 clear
-echo "==========================================="
-echo "         DIGITALVORTEX DNS Bypass          "
-echo "==========================================="
 
-echo "In server Iranian ast ya Khareji?"
-echo "1) IRAN (Client)"
-echo "2) KHAREJ (Server - Sanaei Panel)"
+# Display a colorful header
+echo -e "\033[1;34m==========================================="
+echo -e "\033[1;32m         DIGITALVORTEX DNS Bypass          "
+echo -e "\033[1;34m==========================================="
+echo -e "\033[0m"
+
+# Ask for server mode
+echo -e "\033[1;36mIn server Iranian ast ya Khareji?\033[0m"
+echo -e "\033[1;33m1) IRAN (Client)"
+echo -e "2) KHAREJ (Server - Sanaei Panel)\033[0m"
 read -p "Adad ra vared kon [1-2]: " MODE
 
+# Server mode for KHAREJ (Server)
 if [ "$MODE" == "2" ]; then
-    echo "== Mode Server KHAREJ (Server) =="
-    echo "Nasb Sanaei Panel dar hale anjam ast..."
+    echo -e "\033[1;31m== Mode Server KHAREJ (Server) ==\033[0m"
+    echo -e "\033[1;36mNasb Sanaei Panel dar hale anjam ast...\033[0m"
     bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
 
-    echo "*****************************************"
-    echo "*  Server KHAREJ ba DIGITALVORTEX Ready  *"
-    echo "*****************************************"
-    echo "Be Panel Sanaei vared shavid va config ra baraye IRAN Client sakht konid."
+    echo -e "\033[1;32m*****************************************\033[0m"
+    echo -e "\033[1;32m*  Server KHAREJ ba DIGITALVORTEX Ready  *\033[0m"
+    echo -e "\033[1;32m*****************************************\033[0m"
+    echo -e "\033[1;33mBe Panel Sanaei vared shavid va config ra baraye IRAN Client sakht konid.\033[0m"
     exit 0
 fi
 
+# Client mode for IRAN (Client)
 if [ "$MODE" == "1" ]; then
-    echo "== Mode IRAN (Client) =="
+    echo -e "\033[1;31m== Mode IRAN (Client) ==\033[0m"
     apt update && apt install -y wireguard iptables-persistent
 
     wg genkey | tee /etc/wireguard/privatekey | wg pubkey > /etc/wireguard/publickey
     PRIVATE_KEY=$(cat /etc/wireguard/privatekey)
     PUBLIC_KEY=$(cat /etc/wireguard/publickey)
 
-    echo "Lotfan file config server KHAREJ ra paste konid:"
+    echo -e "\033[1;36mLotfan file config server KHAREJ ra paste konid:\033[0m"
     read -p "Paste config in yeki line va ENTER bezanid: " SERVER_CONFIG
 
     echo "$SERVER_CONFIG" > /etc/wireguard/wg0.conf
@@ -44,11 +51,11 @@ if [ "$MODE" == "1" ]; then
     systemctl enable wg-quick@wg0
     systemctl start wg-quick@wg0
 
-    echo "****************************************"
-    echo "*    DIGITALVORTEX DNS Bypass Ready    *"
-    echo "****************************************"
-    echo "Public Key Client (IRAN):"
+    echo -e "\033[1;32m****************************************\033[0m"
+    echo -e "\033[1;32m*    DIGITALVORTEX DNS Bypass Ready    *\033[0m"
+    echo -e "\033[1;32m****************************************\033[0m"
+    echo -e "\033[1;33mPublic Key Client (IRAN):\033[0m"
     echo "${PUBLIC_KEY}"
 else
-    echo "Adad eshtebah vared shod! Do bare sa'y konid."
+    echo -e "\033[1;31mAdad eshtebah vared shod! Do bare sa'y konid.\033[0m"
 fi

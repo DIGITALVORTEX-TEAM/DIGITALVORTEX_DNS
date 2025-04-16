@@ -41,7 +41,7 @@ if [ "$MODE" == "1" ]; then
     # Request user input for PrivateKey, PublicKey, and Endpoint
     read -p "PrivateKey: " PRIVATE_KEY
     read -p "PublicKey: " PUBLIC_KEY
-    read -p "Endpoint (e.g., 5.75.205.201:26274): " ENDPOINT
+    read -p "Endpoint (e.g., 127.0.0.1:12345): " ENDPOINT
 
     # Write the configuration to the WireGuard config file
     cat > /etc/wireguard/wg0.conf <<EOL

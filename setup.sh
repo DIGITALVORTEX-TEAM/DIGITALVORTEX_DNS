@@ -81,14 +81,14 @@ EOL
 
     # Enable and start WireGuard
     systemctl enable wg-quick@wg0 >> $LOG_FILE 2>&1
-    systemctl start wg-quick@wg0 >> $LOG_FILE 2>&1
+    systemctl restart wg-quick@wg0 >> $LOG_FILE 2>&1  # Restart WireGuard to apply changes
 
     # Configure dnsmasq
     echo "interface=wg0" > /etc/dnsmasq.conf
     echo "bind-interfaces" >> /etc/dnsmasq.conf
     echo "server=127.0.0.1" >> /etc/dnsmasq.conf
     systemctl enable dnsmasq >> $LOG_FILE 2>&1
-    systemctl start dnsmasq >> $LOG_FILE 2>&1
+    systemctl restart dnsmasq >> $LOG_FILE 2>&1  # Restart dnsmasq to apply changes
 
     log_message "\033[1;32m****************************************\033[0m"
     log_message "\033[1;32m*    DIGITALVORTEX DNS Bypass Ready    *\033[0m"

@@ -43,7 +43,7 @@ if [ "$MODE" == "1" ]; then
     nano /etc/wireguard/wg0.conf
 
     # Validate config content
-    if ! grep -q "Interface" /etc/wireguard/wg0.conf || ! grep -q "Peer" /etc/wireguard/wg0.conf; then
+    if ! grep -q "[Interface]" /etc/wireguard/wg0.conf || ! grep -q "[Peer]" /etc/wireguard/wg0.conf; then
         echo -e "\033[1;31mError: Config gheyre sahih ast! Ebarat [Interface] ya [Peer] yaft nashod.\033[0m"
         rm -f /etc/wireguard/wg0.conf
         exit 1

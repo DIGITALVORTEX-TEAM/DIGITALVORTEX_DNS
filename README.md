@@ -1,112 +1,119 @@
-```markdown
-# DIGITALVORTEX DNS Bypass System
-![DIGITALVORTEX Logo](https://raw.githubusercontent.com/DIGITALVORTEX-TEAM/DIGITALVORTEX_DNS/main/assets/logo.png)
+# 🌐 DIGITALVORTEX DNS BYPASS
 
-**Enterprise-Grade Censorship Circumvention Solution**  
-**راه‌حل سازمانی برای عبور از محدودیت‌های اینترنتی**
+## 💡 English Description
+DIGITALVORTEX is a **simple, stylish, and user-friendly DNS Bypass System** — designed to bypass **filters and sanctions** with 2 smart server roles:
 
----
+- 🟢 `Server IRAN`: Acts as a DNS Forwarder using `dnsmasq`. Sends all DNS queries to your foreign server.
+- 🔵 `Server KHAREJ`: Runs a `DoH Server` using `CoreDNS` + TLS. Breaks sanctions and unlocks all websites.
 
-## 🌐 Table of Contents
-- [Features](#-features)
-- [Installation](#-installation)
-- [Server Modes](#-server-modes)
-- [Usage](#-usage)
-- [Security](#-security)
-- [Support](#-support)
+🎯 **Goal:**  
+Your devices will only see the IRAN server IP, but in reality, DNS requests pass through your KHAREJ DoH server — bypassing sanctions and unlocking everything.
 
 ---
 
-## ✨ Features
+## ⚙️ How to Install?
 
-### Dual-Server Architecture
-- 🇮🇷 **Iran Server**: Frontend with traffic filtering
-- 🌍 **Foreign Server**: Backend with unrestricted access
-
-### Advanced Technologies
-- WireGuard VPN with obfuscation
-- DNS-over-TLS/HTTPS
-- Intelligent traffic routing
-- Automatic failover
-
-### Management
-- Web-based control panel
-- CLI management tool
-- Real-time monitoring
-
----
-
-## 📥 Installation
-
-### Quick Install (Auto-Detect)
+1️⃣ Connect to your server via SSH.  
+2️⃣ Run this simple command:
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/DIGITALVORTEX-TEAM/DIGITALVORTEX_DNS/main/install.sh)
 ```
 
-### Manual Installation
-1. Clone repository:
-   ```bash
-   git clone https://github.com/DIGITALVORTEX-TEAM/DIGITALVORTEX_DNS.git
-   cd DIGITALVORTEX_DNS
-   ```
-2. Run installer:
-   ```bash
-   sudo ./install.sh
-   ```
+3️⃣ Select your mode:
+
+- `1)` IRAN Server — DNS Forwarder.
+- `2)` KHAREJ Server — DoH Server with CoreDNS.
+- `3)` Remove Configurations.
+- `4)` Test Server Connection.
 
 ---
 
-## ⚙️ Server Modes
+## 💡 Requirements
 
-### 🌍 Foreign Server Mode
-```bash
-curl -s https://raw.githubusercontent.com/DIGITALVORTEX-TEAM/DIGITALVORTEX_DNS/main/scripts/foreign.sh | sudo bash
-```
+### For KHAREJ Server:
+- VPS with public IPv4 and port `443` open.
+- Valid TLS certificate (`.pem`) and private key.
 
-### 🇮🇷 Iran Server Mode
-```bash
-curl -s https://raw.githubusercontent.com/DIGITALVORTEX-TEAM/DIGITALVORTEX_DNS/main/scripts/iran.sh | sudo bash
-```
+### For IRAN Server:
+- VPS or Mikrotik or any Linux system supporting `dnsmasq`.
 
 ---
 
-## 📡 Usage
+## 🧠 Note:
 
-### Start Service
-```bash
-sudo digitalvortex start
-```
-
-### Check Status
-```bash
-sudo digitalvortex status
-```
-
-### Test Connection
-```bash
-sudo digitalvortex test
-```
-
-### Update Configurations
-```bash
-sudo digitalvortex reconfigure
-```
+- Fully written in Fingilish — easy and fun!
+- `dnsmasq` forwards traffic directly to KHAREJ IP.
+- CoreDNS + TLS hides your domain, clients will always see IRAN server's IP.
 
 ---
 
-## 🔒 Security Features
+## 🌀 DIGITALVORTEX Features:
 
-| Feature               | Implementation          |
-|-----------------------|-------------------------|
-| Encryption            | AES-256 + ChaCha20      |
-| DNS Security          | DNSSEC + DoT/DoH        |
-| Authentication        | WireGuard PSK           |
-| Obfuscation          | Traffic Masking         |
-| Firewall             | Automated iptables Rules |
+- Unlock all websites — No more sanctions!
+- DNS Bypass with IRAN server's IP.
+- CoreDNS-based DoH server on KHAREJ.
+- Super simple and stylish interactive installer.
 
 ---
 
-## 📚 Documentation
+---
 
-- [Full Technical Documentation](docs/TECH.md)
-- [F
+## 💡 توضیحات فارسی
+
+DIGITALVORTEX یک سیستم **DNS Bypass خیلی ساده و خوشگل و یوزرفرندلی** هست که برای دور زدن **فیلترینگ و تحریم‌ها** طراحی شده، با دو حالت:
+
+- 🟢 `سرور ایران`: یک **DNS Forwarder** هست که با `dnsmasq` تنظیم میشه و تمام درخواست‌های DNS رو به سرور خارج میفرسته.
+- 🔵 `سرور خارج`: یک **DoH Server** هست با `CoreDNS` و `TLS Certificate` که تمام تحریم‌ها رو از بین می‌بره.
+
+🎯 **هدف:**  
+کلاینت‌ها فقط IP سرور ایران رو می‌بینن، ولی ترافیک DNS از طریق سرور خارج و DoH رد میشه و همه سایت‌ها آزاد میشن.
+
+---
+
+## ⚙️ آموزش نصب
+
+۱- به سرورت SSH بزن.  
+۲- این دستور رو اجرا کن:
+```bash
+bash <(curl -s https://raw.githubusercontent.com/DIGITALVORTEX-TEAM/DIGITALVORTEX_DNS/main/install.sh)
+```
+
+۳- یکی از گزینه‌ها رو انتخاب کن:
+
+- `1)` سرور ایران — تنظیم DNS Forwarder.
+- `2)` سرور خارج — نصب DoH Server با CoreDNS.
+- `3)` حذف تمام تنظیمات.
+- `4)` تست وضعیت اتصال.
+
+---
+
+## 💡 نیازمندی‌ها
+
+### برای سرور خارج:
+- سرور VPS با IP عمومی و پورت `443` باز.
+- TLS Certificate معتبر (`.pem`) و Private Key.
+
+### برای سرور ایران:
+- هر VPS یا سیستم لینوکسی که بتونه `dnsmasq` نصب کنه.
+
+---
+
+## 🧠 نکته:
+
+- همه چیز به فینگلیش نوشته شده، خیلی ساده و جذاب!
+- `dnsmasq` تمام درخواست‌ها رو مستقیم به IP سرور خارج ارسال می‌کنه.
+- `CoreDNS` با TLS جلوی لو رفتن دامین رو می‌گیره و فقط IP ایران برای کاربر نمایش داده میشه.
+
+---
+
+## 🌀 ویژگی‌های DIGITALVORTEX:
+
+- رفع کامل تحریم برای همه سایت‌ها.
+- عبور DNS از سرور خارج ولی نمایش IP سرور ایران.
+- DoH Server قدرتمند با CoreDNS و TLS.
+- نصب فوق‌العاده ساده، شیک و سریع.
+
+---
+
+🧠 اگر سوالی داشتی یا خواستی شخصی‌سازیش کنی — هر موقع بگو!  
+طراحی با ❤️ توسط تیم **DIGITALVORTEX**

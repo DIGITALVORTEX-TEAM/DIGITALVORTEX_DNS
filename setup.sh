@@ -1,128 +1,104 @@
 #!/bin/bash
-# DIGITALVORTEX_DNS - Smart DNS Management System
-# GitHub: https://github.com/yourusername/DIGITALVORTEX_DNS
-# License: MIT
 
-# ==================== CONFIGURATION ====================
-IRAN_DNS="178.22.122.100"  # دی‌ان‌اس پیش‌فرض ایران (مثل Shecan)
-FOREIGN_DNS="8.8.8.8"       # دی‌ان‌اس خارج (Google DNS)
-CONFIG_DIR="/etc/digitalvortex"
-LOG_FILE="/var/log/digitalvortex.log"
-INSTALL_MODE=""             # Modes: iran, foreign, standalone
-# ======================================================
+# Clear Terminal
+clear
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-NC='\033[0m'
+# DIGITALVORTEX Stylish Banner
+echo -e "\033[1;35m===============================================\033[0m"
+echo -e "\033[1;36m          DIGITALVORTEX DNS BYPASS            \033[0m"
+echo -e "\033[1;35m===============================================\033[0m"
 
-# ASCII Art
-show_banner() {
-  clear
-  echo -e "${CYAN}"
-  echo '  ____  ____ ___ _____ _   _ ____  ____  ____  _____ ____ ____  '
-  echo ' |  _ \|  _ \_ _|_   _| | | |  _ \|  _ \|  _ \| ____/ ___/ ___| '
-  echo ' | | | | | | | |  | | | |_| | | | | |_) | | | |  _| \___ \___ \ '
-  echo ' | |_| | |_| | |  | | |  _  | |_| |  _ <| |_| | |___ ___) |__) |'
-  echo ' |____/|____/___| |_| |_| |_|____/|_| \_\____/|_____|____/____/ '
-  echo '                    DNS Management System v2.0'
-  echo -e "${NC}"
+# Menu
+echo -e "\033[1;33mLotfan Role mored nazar ro entekhab kon:\033[0m"
+echo -e "\033[1;32m1) Server IRAN (DNS Forwarder)\033[0m"
+echo -e "\033[1;34m2) Server KHAREJ (DoH Server with CoreDNS)\033[0m"
+echo -e "\033[1;31m3) Remove DIGITALVORTEX Setup\033[0m"
+echo -e "\033[1;36m4) Test DIGITALVORTEX Connection\033[0m"
+read -p "Adad mored nazar ro vared kon (1-4): " MODE
+
+if [ "$MODE" == "2" ]; then
+    echo -e "\033[1;34m== Mode Server KHAREJ (DoH Server) ==\033[0m"
+    apt update && apt install -y curl wget unzip systemd
+    wget https://github.com/coredns/coredns/releases/download/v1.11.1/coredns_1.11.1_linux_amd64.tgz
+    tar -xvzf coredns_1.11.1_linux_amd64.tgz
+    mv coredns /usr/local/bin/
+
+    cat > /etc/coredns/Corefile <<EOF
+.:443 {
+    tls your-cert.pem your-key.pem
+    forward . 8.8.8.8 1.1.1.1
+    log
+    errors
 }
+EOF
 
-# Main Menu
-show_menu() {
-  show_banner
-  echo -e "${GREEN}Select an option:${NC}"
-  echo -e "1) ${YELLOW}Install on Iran Server${NC}"
-  echo -e "2) ${YELLOW}Install on Foreign Server${NC}"
-  echo -e "3) ${YELLOW}Standalone Mode (Foreign Only)${NC}"
-  echo -e "4) ${YELLOW}Test DNS Connection${NC}"
-  echo -e "5) ${YELLOW}Uninstall DIGITALVORTEX_DNS${NC}"
-  echo -e "6) ${RED}Exit${NC}"
-  echo -n -e "${BLUE}Enter your choice [1-6]: ${NC}"
-}
+    cat > /etc/systemd/system/coredns.service <<EOF
+[Unit]
+Description=CoreDNS
+After=network.target
 
-# ==================== CORE FUNCTIONS ====================
+[Service]
+ExecStart=/usr/local/bin/coredns -conf /etc/coredns/Corefile
+Restart=always
+User=root
 
-install_dependencies() {
-  echo -e "${YELLOW}[+] Installing required packages...${NC}"
-  apt-get update -qq
-  apt-get install -y -qq unbound bind9 dnsutils net-tools
-}
+[Install]
+WantedBy=multi-user.target
+EOF
 
-configure_iran_server() {
-  echo -e "${GREEN}[+] Configuring Iran Server (Frontend)...${NC}"
-  cat > /etc/unbound/unbound.conf <<EOL
-server:
-  interface: 0.0.0.0
-  access-control: 0.0.0.0/0 allow
-  do-tcp: yes
-  prefetch: yes
-  
-forward-zone:
-  name: "."
-  forward-addr: $FOREIGN_DNS
-EOL
-  systemctl restart unbound
-}
+    systemctl daemon-reload
+    systemctl enable coredns
+    systemctl start coredns
 
-configure_foreign_server() {
-  echo -e "${GREEN}[+] Configuring Foreign Server (Backend)...${NC}"
-  cat > /etc/bind/named.conf.options <<EOL
-options {
-  directory "/var/cache/bind";
-  recursion yes;
-  allow-query { any; };
-  forwarders { 8.8.8.8; 1.1.1.1; };
-  forward only;
-  dnssec-enable yes;
-  querylog yes;
-};
-EOL
-  systemctl restart bind9
-}
+    echo -e "\033[1;32mDIGITALVORTEX KHAREJ DoH Server Ready!\033[0m"
+    exit 0
+fi
 
-configure_standalone() {
-  configure_foreign_server
-  echo -e "${YELLOW}[+] Additional standalone optimizations...${NC}"
-  apt-get install -y -qq dnscrypt-proxy
-}
+if [ "$MODE" == "1" ]; then
+    echo -e "\033[1;32m== Mode Server IRAN (DNS Forwarder) ==\033[0m"
+    apt update && apt install -y dnsmasq
 
-test_connection() {
-  echo -e "${CYAN}[+] Testing DNS resolution...${NC}"
-  for domain in google.com youtube.com twitter.com instagram.com; do
-    echo -n "Testing $domain: "
-    result=$(dig +short @127.0.0.1 $domain)
-    [ -z "$result" ] && echo -e "${RED}FAIL${NC}" || echo -e "${GREEN}PASS${NC}"
-  done
-}
+    read -p "DoH Server KHAREJ IP ro vared kon: " DOH_IP
 
-uninstall() {
-  echo -e "${RED}[!] Uninstalling DIGITALVORTEX_DNS...${NC}"
-  systemctl stop unbound bind9
-  apt-get remove -y unbound bind9 dnscrypt-proxy
-  rm -rf $CONFIG_DIR
-  echo -e "${GREEN}[+] Uninstallation complete!${NC}"
-}
+    cat > /etc/dnsmasq.conf <<EOF
+server=$DOH_IP#443
+listen-address=127.0.0.1
+no-resolv
+EOF
 
-# ==================== MAIN EXECUTION ====================
+    systemctl enable dnsmasq
+    systemctl restart dnsmasq
 
-while true; do
-  show_menu
-  read choice
-  
-  case $choice in
-    1) install_dependencies; configure_iran_server ;;
-    2) install_dependencies; configure_foreign_server ;;
-    3) install_dependencies; configure_standalone ;;
-    4) test_connection ;;
-    5) uninstall ;;
-    6) exit 0 ;;
-    *) echo -e "${RED}Invalid option!${NC}" ;;
-  esac
-  
-  read -p "Press [Enter] to continue..."
-done
+    echo -e "\033[1;32mDIGITALVORTEX IRAN Server DNS Forwarder Ready!\033[0m"
+    exit 0
+fi
+
+if [ "$MODE" == "3" ]; then
+    echo -e "\033[1;31m== DIGITALVORTEX Removing Setup ==\033[0m"
+    systemctl stop coredns dnsmasq
+    systemctl disable coredns dnsmasq
+    rm -f /usr/local/bin/coredns /etc/coredns/Corefile /etc/systemd/system/coredns.service
+    apt-get remove --purge -y dnsmasq
+    systemctl daemon-reload
+    echo -e "\033[1;32mDIGITALVORTEX Successfully Removed!\033[0m"
+    exit 0
+fi
+
+if [ "$MODE" == "4" ]; then
+    echo -e "\033[1;36m== DIGITALVORTEX Test Connection ==\033[0m"
+    if systemctl is-active --quiet coredns; then
+        echo -e "\033[1;32m[+] CoreDNS: Active\033[0m"
+    else
+        echo -e "\033[1;31m[-] CoreDNS: Not Running\033[0m"
+    fi
+    if systemctl is-active --quiet dnsmasq; then
+        echo -e "\033[1;32m[+] dnsmasq: Active\033[0m"
+    else
+        echo -e "\033[1;31m[-] dnsmasq: Not Running\033[0m"
+    fi
+    echo -e "\033[1;36mTest Completed!\033[0m"
+    exit 0
+fi
+
+# Invalid Option
+echo -e "\033[1;31mAdad eshtebah vared shod! Doobare talash kon.\033[0m"

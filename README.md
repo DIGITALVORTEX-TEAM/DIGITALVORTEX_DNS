@@ -16,7 +16,7 @@ Your devices will only see the IRAN server IP, but in reality, DNS requests pass
 1️⃣ Connect to your server via SSH.  
 2️⃣ Run this simple command:
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/DIGITALVORTEX-TEAM/DIGITALVORTEX_DNS/main/install.sh)
+bash <(curl -s https://raw.githubusercontent.com/DIGITALVORTEX-TEAM/DIGITALVORTEX_DNS/main/setup.sh)
 ```
 
 3️⃣ Select your mode:
@@ -75,7 +75,7 @@ DIGITALVORTEX یک سیستم **DNS Bypass خیلی ساده و خوشگل و ی
 ۱- به سرورت SSH بزن.  
 ۲- این دستور رو اجرا کن:
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/DIGITALVORTEX-TEAM/DIGITALVORTEX_DNS/main/install.sh)
+bash <(curl -s https://raw.githubusercontent.com/DIGITALVORTEX-TEAM/DIGITALVORTEX_DNS/main/setup.sh)
 ```
 
 ۳- یکی از گزینه‌ها رو انتخاب کن:

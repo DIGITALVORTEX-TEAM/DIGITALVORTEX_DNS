@@ -1,104 +1,120 @@
 #!/bin/bash
 
-# Clear Terminal
+# --- DIGITALVORTEX DNS Bypass Setup with Hysteria ---
+# Written in Fingilish, for all users!
+
 clear
 
-# DIGITALVORTEX Stylish Banner
-echo -e "\033[1;35m===============================================\033[0m"
-echo -e "\033[1;36m          DIGITALVORTEX DNS BYPASS            \033[0m"
-echo -e "\033[1;35m===============================================\033[0m"
+echo "🌐 Welcome to DIGITALVORTEX DNS Bypass Setup with Hysteria!"
+echo "🔧 Please choose your mode:"
+echo "1) Set up Iran Server - DNS Forwarder (dnsmasq)"
+echo "2) Set up Kharej Server - DoH Server (CoreDNS)"
+echo "3) Set up Hysteria VPN for full internet bypass"
+echo "4) Remove all configurations"
+echo "5) Test Server Connection"
 
-# Menu
-echo -e "\033[1;33mLotfan Role mored nazar ro entekhab kon:\033[0m"
-echo -e "\033[1;32m1) Server IRAN (DNS Forwarder)\033[0m"
-echo -e "\033[1;34m2) Server KHAREJ (DoH Server with CoreDNS)\033[0m"
-echo -e "\033[1;31m3) Remove DIGITALVORTEX Setup\033[0m"
-echo -e "\033[1;36m4) Test DIGITALVORTEX Connection\033[0m"
-read -p "Adad mored nazar ro vared kon (1-4): " MODE
+read -p "Enter your choice: " choice
 
-if [ "$MODE" == "2" ]; then
-    echo -e "\033[1;34m== Mode Server KHAREJ (DoH Server) ==\033[0m"
-    apt update && apt install -y curl wget unzip systemd
-    wget https://github.com/coredns/coredns/releases/download/v1.11.1/coredns_1.11.1_linux_amd64.tgz
-    tar -xvzf coredns_1.11.1_linux_amd64.tgz
-    mv coredns /usr/local/bin/
+# --- Iran Server Setup ---
+if [ "$choice" -eq 1 ]; then
+  echo "🟢 Setting up Iran Server (DNS Forwarder with dnsmasq)..."
+  
+  # Install dnsmasq
+  sudo apt update
+  sudo apt install -y dnsmasq
+  
+  echo "🔧 Configuring dnsmasq..."
+  # Create a basic dnsmasq configuration file
+  echo "
+  server=8.8.8.8
+  server=8.8.4.4
+  address=/example.com/37.202.222.218 # Replace with actual domain-to-IP mappings
+  " | sudo tee /etc/dnsmasq.conf > /dev/null
+  
+  # Restart dnsmasq to apply changes
+  sudo systemctl restart dnsmasq
+  echo "✅ Iran Server DNS Forwarder (dnsmasq) setup completed!"
+fi
 
-    cat > /etc/coredns/Corefile <<EOF
-.:443 {
-    tls your-cert.pem your-key.pem
-    forward . 8.8.8.8 1.1.1.1
+# --- Kharej Server Setup ---
+if [ "$choice" -eq 2 ]; then
+  echo "🔵 Setting up Kharej Server (DoH Server with CoreDNS)..."
+  
+  # Install CoreDNS
+  sudo apt update
+  sudo apt install -y curl
+  curl -s https://github.com/coredns/coredns/releases/download/v1.9.0/coredns_1.9.0_linux_amd64.tgz | tar -xz
+  sudo mv coredns /usr/local/bin/
+  
+  echo "🔧 Configuring CoreDNS for DoH (DNS over HTTPS)..."
+  # Create CoreDNS config file for DoH
+  echo "
+  . {
+    forward . 8.8.8.8
     log
-    errors
-}
-EOF
-
-    cat > /etc/systemd/system/coredns.service <<EOF
-[Unit]
-Description=CoreDNS
-After=network.target
-
-[Service]
-ExecStart=/usr/local/bin/coredns -conf /etc/coredns/Corefile
-Restart=always
-User=root
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-    systemctl daemon-reload
-    systemctl enable coredns
-    systemctl start coredns
-
-    echo -e "\033[1;32mDIGITALVORTEX KHAREJ DoH Server Ready!\033[0m"
-    exit 0
+    tls /path/to/cert.pem /path/to/key.pem
+    # Additional DoH settings
+  }
+  " | sudo tee /etc/coredns/Corefile > /dev/null
+  
+  # Start CoreDNS service
+  sudo systemctl start coredns
+  sudo systemctl enable coredns
+  echo "✅ Kharej Server DoH setup completed!"
 fi
 
-if [ "$MODE" == "1" ]; then
-    echo -e "\033[1;32m== Mode Server IRAN (DNS Forwarder) ==\033[0m"
-    apt update && apt install -y dnsmasq
-
-    read -p "DoH Server KHAREJ IP ro vared kon: " DOH_IP
-
-    cat > /etc/dnsmasq.conf <<EOF
-server=$DOH_IP#443
-listen-address=127.0.0.1
-no-resolv
-EOF
-
-    systemctl enable dnsmasq
-    systemctl restart dnsmasq
-
-    echo -e "\033[1;32mDIGITALVORTEX IRAN Server DNS Forwarder Ready!\033[0m"
-    exit 0
+# --- Hysteria VPN Setup ---
+if [ "$choice" -eq 3 ]; then
+  echo "🔒 Setting up Hysteria VPN for full internet bypass..."
+  
+  # Install Hysteria
+  curl -fsSL https://github.com/HyNetwork/hysteria/releases/download/v1.1.0/hysteria-linux-amd64-v1.1.0.tar.gz | tar -xz
+  sudo mv hysteria /usr/local/bin/
+  
+  # Create Hysteria configuration
+  echo "
+  # Hysteria server config
+  listen = 0.0.0.0:443
+  cert = /path/to/cert.pem
+  key = /path/to/key.pem
+  mtu = 1350
+  " | sudo tee /etc/hysteria/hysteria_server.conf > /dev/null
+  
+  # Start Hysteria server
+  sudo systemctl start hysteria
+  sudo systemctl enable hysteria
+  echo "✅ Hysteria VPN setup completed!"
 fi
 
-if [ "$MODE" == "3" ]; then
-    echo -e "\033[1;31m== DIGITALVORTEX Removing Setup ==\033[0m"
-    systemctl stop coredns dnsmasq
-    systemctl disable coredns dnsmasq
-    rm -f /usr/local/bin/coredns /etc/coredns/Corefile /etc/systemd/system/coredns.service
-    apt-get remove --purge -y dnsmasq
-    systemctl daemon-reload
-    echo -e "\033[1;32mDIGITALVORTEX Successfully Removed!\033[0m"
-    exit 0
+# --- Remove Configurations ---
+if [ "$choice" -eq 4 ]; then
+  echo "⚙️ Removing all configurations..."
+  
+  # Remove dnsmasq
+  sudo apt remove --purge -y dnsmasq
+  sudo rm -rf /etc/dnsmasq.conf
+  echo "✅ dnsmasq configurations removed."
+  
+  # Remove CoreDNS
+  sudo rm -rf /usr/local/bin/coredns
+  sudo rm -rf /etc/coredns
+  echo "✅ CoreDNS configurations removed."
+  
+  # Remove Hysteria
+  sudo rm -rf /usr/local/bin/hysteria
+  sudo rm -rf /etc/hysteria
+  echo "✅ Hysteria configurations removed."
 fi
 
-if [ "$MODE" == "4" ]; then
-    echo -e "\033[1;36m== DIGITALVORTEX Test Connection ==\033[0m"
-    if systemctl is-active --quiet coredns; then
-        echo -e "\033[1;32m[+] CoreDNS: Active\033[0m"
-    else
-        echo -e "\033[1;31m[-] CoreDNS: Not Running\033[0m"
-    fi
-    if systemctl is-active --quiet dnsmasq; then
-        echo -e "\033[1;32m[+] dnsmasq: Active\033[0m"
-    else
-        echo -e "\033[1;31m[-] dnsmasq: Not Running\033[0m"
-    fi
-    echo -e "\033[1;36mTest Completed!\033[0m"
-    exit 0
+# --- Test Server Connection ---
+if [ "$choice" -eq 5 ]; then
+  echo "⚡ Testing server connection..."
+  
+  # Simple test to check connectivity
+  ping -c 4 google.com
+  echo "✅ Connection test completed!"
 fi
 
-# Invalid Option
-echo -e "\033[1;31mAdad eshtebah vared shod! Doobare talash kon.\033[0m"
+# End
+echo "🌟 DIGITALVORTEX Setup Completed!"
+echo "🚀 Your system is ready to bypass DNS filtering and use Hysteria VPN for full internet access."

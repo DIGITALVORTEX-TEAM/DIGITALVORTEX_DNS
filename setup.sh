@@ -42,13 +42,8 @@ install_dnsproxy() {
     sudo mv linux-amd64/dnsproxy /usr/local/bin/dnsproxy
     rm -rf linux-amd64 dnsproxy.tar.gz
 
-    # Prompt for domain
-    clear
-    read -p "Enter your domain (e.g., yourdomain.com): " domain
-    if [ -z "$domain" ]; then
-        echo "Domain cannot be empty!"
-        exit 1
-    fi
+    # Set domain
+    domain="smartsni.aryaline.ir"
 
     # Install acme.sh for SSL certificates
     curl https://get.acme.sh | sh
@@ -60,6 +55,12 @@ install_dnsproxy() {
 
     # Issue SSL certificate
     ~/.acme.sh/acme.sh --issue -d "$domain" --standalone --httpport 80 --force
+    if [ $? -ne 0 ]; then
+        echo "Failed to issue SSL certificate. Check if the domain points to this server's IP and port 80 is free."
+        exit 1
+    fi
+
+    # Install SSL certificate
     ~/.acme.sh/acme.sh --install-cert -d "$domain" \
         --cert-file /etc/dnsproxy/dnscrypt.crt \
         --key-file /etc/dnsproxy/dnscrypt.key
@@ -68,6 +69,12 @@ install_dnsproxy() {
     sudo mkdir -p /etc/dnsproxy
     sudo chmod 644 /etc/dnsproxy/dnscrypt.crt
     sudo chmod 600 /etc/dnsproxy/dnscrypt.key
+
+    # Verify certificate files exist
+    if [ ! -f /etc/dnsproxy/dnscrypt.crt ] || [ ! -f /etc/dnsproxy/dnscrypt.key ]; then
+        echo "SSL certificate files were not created. Please check acme.sh logs."
+        exit 1
+    fi
 
     # Create dnsproxy configuration
     cat > /etc/dnsproxy/config.yaml <<EOL

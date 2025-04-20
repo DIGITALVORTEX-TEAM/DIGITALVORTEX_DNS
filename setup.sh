@@ -23,81 +23,87 @@ detect_distribution() {
 install_dependencies() {
     detect_distribution
     $pm update -y
-    $pm install -y curl jq apache2-utils
+    $pm install -y curl jq socat
 }
 
-# Function to install AdGuard Home as DoH server
-install_adguard() {
-    if systemctl is-active --quiet AdGuardHome.service; then
-        echo "AdGuard Home is already installed and active."
+# Function to install dnsproxy as DoH server
+install_dnsproxy() {
+    if systemctl is-active --quiet dnsproxy.service; then
+        echo "dnsproxy is already installed and active."
         return
     fi
 
     install_dependencies
 
-    # Download and install AdGuard Home
-    curl -s -S -L https://raw.githubusercontent.com/AdguardTeam/AdGuardHome/master/scripts/install.sh | sh -s -- -v
+    # Download and install dnsproxy
+    LATEST_RELEASE=$(curl -s https://api.github.com/repos/AdguardTeam/dnsproxy/releases/latest | jq -r '.tag_name')
+    curl -sL "https://github.com/AdguardTeam/dnsproxy/releases/download/${LATEST_RELEASE}/dnsproxy-linux-amd64-${LATEST_RELEASE}.tar.gz" -o dnsproxy.tar.gz
+    tar -xzf dnsproxy.tar.gz
+    sudo mv linux-amd64/dnsproxy /usr/local/bin/dnsproxy
+    rm -rf linux-amd64 dnsproxy.tar.gz
 
-    # Prompt for domain and admin password
+    # Prompt for domain
     clear
     read -p "Enter your domain (e.g., yourdomain.com): " domain
     if [ -z "$domain" ]; then
         echo "Domain cannot be empty!"
         exit 1
     fi
-    read -p "Enter admin password for AdGuard Home: " password
-    if [ -z "$password" ]; then
-        echo "Password cannot be empty!"
-        exit 1
-    fi
 
     # Install acme.sh for SSL certificates
     curl https://get.acme.sh | sh
     ~/.acme.sh/acme.sh --set-default-ca --server letsencrypt
-    ~/.acme.sh/acme.sh --issue -d "$domain" --standalone --httpport 80
+
+    # Stop any service using port 80
+    sudo systemctl stop dnsproxy 2>/dev/null || true
+    sudo fuser -k 80/tcp 2>/dev/null || true
+
+    # Issue SSL certificate
+    ~/.acme.sh/acme.sh --issue -d "$domain" --standalone --httpport 80 --force
     ~/.acme.sh/acme.sh --install-cert -d "$domain" \
-        --cert-file /opt/AdGuardHome/dnscrypt.crt \
-        --key-file /opt/AdGuardHome/dnscrypt.key
+        --cert-file /etc/dnsproxy/dnscrypt.crt \
+        --key-file /etc/dnsproxy/dnscrypt.key
 
     # Set permissions
-    chmod 644 /opt/AdGuardHome/dnscrypt.crt
-    chmod 600 /opt/AdGuardHome/dnscrypt.key
+    sudo mkdir -p /etc/dnsproxy
+    sudo chmod 644 /etc/dnsproxy/dnscrypt.crt
+    sudo chmod 600 /etc/dnsproxy/dnscrypt.key
 
-    # Generate hashed password
-    hashed_password=$(htpasswd -bnBC 10 "" "$password" | tr -d ':\n')
-
-    # Configure AdGuard Home for DoH
-    cat > /opt/AdGuardHome/AdGuardHome.yaml <<EOL
-http:
-  address: 0.0.0.0:80
-  secure_address: 0.0.0.0:443
-  certificate: /opt/AdGuardHome/dnscrypt.crt
-  key: /opt/AdGuardHome/dnscrypt.key
-dns:
-  bind_hosts:
-    - 0.0.0.0
-  port: 53
-  upstream_dns:
-    - https://cloudflare-dns.com/dns-query
-    - https://dns.google/dns-query
-    - https://dns.quad9.net/dns-query
-    - https://dns.adguard.com/dns-query
-  bootstrap_dns:
-    - 8.8.8.8
-    - 1.1.1.1
-  allow_unencrypted_doh: false
-  enable_dnssec: false
-  ratelimit: 0
-  cache_ttl_min: 0
-  cache_ttl_max: 0
-users:
-  - name: admin
-    password: $hashed_password
+    # Create dnsproxy configuration
+    cat > /etc/dnsproxy/config.yaml <<EOL
+listen-addr: 0.0.0.0
+listen-port: 53
+https-listen-port: 443
+certificate-path: /etc/dnsproxy/dnscrypt.crt
+private-key-path: /etc/dnsproxy/dnscrypt.key
+upstream:
+  - https://cloudflare-dns.com/dns-query
+  - https://dns.google/dns-query
+  - https://dns.quad9.net/dns-query
+bootstrap:
+  - 8.8.8.8
+  - 1.1.1.1
 EOL
 
-    # Enable and start AdGuard Home
-    systemctl enable AdGuardHome
-    systemctl start AdGuardHome
+    # Create systemd service for dnsproxy
+    cat > /etc/systemd/system/dnsproxy.service <<EOL
+[Unit]
+Description=dnsproxy DoH Server
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/dnsproxy -c /etc/dnsproxy/config.yaml
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EOL
+
+    # Enable and start dnsproxy
+    sudo systemctl daemon-reload
+    sudo systemctl enable dnsproxy
+    sudo systemctl start dnsproxy
 
     # Open firewall ports
     if command -v ufw >/dev/null; then
@@ -110,67 +116,67 @@ EOL
         ufw reload
     fi
 
-    # Check if AdGuard Home is active
-    if systemctl is-active --quiet AdGuardHome.service; then
-        echo "AdGuard Home is now active as a DoH server."
+    # Check if dnsproxy is active
+    if systemctl is-active --quiet dnsproxy.service; then
+        echo "dnsproxy is now active as a DoH server."
         echo "DoH URL: https://$domain/dns-query"
-        echo "Web Interface: http://$domain:80 (use admin/$password to log in)"
         echo "Add the DoH URL to Upstream DNS Servers in AdGuard Home on your Iran server."
     else
-        echo "Failed to start AdGuard Home. Check logs with: journalctl -u AdGuardHome.service"
+        echo "Failed to start dnsproxy. Check logs with: journalctl -u dnsproxy.service"
         exit 1
     fi
 }
 
-# Function to uninstall AdGuard Home
-uninstall_adguard() {
-    if [ ! -f "/opt/AdGuardHome/AdGuardHome.yaml" ]; then
-        echo "AdGuard Home is not installed."
+# Function to uninstall dnsproxy
+uninstall_dnsproxy() {
+    if [ ! -f "/etc/dnsproxy/config.yaml" ]; then
+        echo "dnsproxy is not installed."
         return
     fi
 
     # Stop and disable service
-    systemctl stop AdGuardHome
-    systemctl disable AdGuardHome
+    sudo systemctl stop dnsproxy
+    sudo systemctl disable dnsproxy
 
     # Remove files
-    rm -rf /opt/AdGuardHome
-    rm -rf ~/.acme.sh
+    sudo rm -rf /etc/dnsproxy
+    sudo rm -rf /usr/local/bin/dnsproxy
+    sudo rm -rf ~/.acme.sh
 
     # Remove systemd service
-    rm -f /etc/systemd/system/AdGuardHome.service
-    systemctl daemon-reload
+    sudo rm -f /etc/systemd/system/dnsproxy.service
+    sudo systemctl daemon-reload
 
-    echo "AdGuard Home uninstalled successfully."
+    echo "dnsproxy uninstalled successfully."
 }
 
 # Function to check status
 check_status() {
-    if systemctl is-active --quiet AdGuardHome.service; then
-        echo "[AdGuard Home Service Is Active]"
+    if systemctl is-active --quiet dnsproxy.service; then
+        echo "[dnsproxy Service Is Active]"
     else
-        echo "[AdGuard Home Service Is Not Active]"
+        echo "[dnsproxy Service Is Not Active]"
     fi
 }
 
 # Main menu
 clear
-echo "By --> Grok, AdGuard Home DoH Server Setup (Similar to Shecan)"
+echo "By --> Grok, dnsproxy DoH Server Setup (Similar to Shecan)"
 echo "--*-* DoH DNS Server Installer *-*--"
 echo ""
 echo "Select an option:"
-echo "1) Install AdGuard Home (DoH Server)"
-echo "2) Uninstall AdGuard Home"
+echo "1) Install dnsproxy (DoH Server)"
+echo "2) Uninstall dnsproxy"
 echo "0) Exit"
 echo "----$(check_status)----"
 read -p "Enter your choice: " choice
 
 case "$choice" in
     1)
-        install_adguard
+        install_dnsproxy
         ;;
     2)
-        uninstall_adguard
+        uninstall_dnsproxy
         ;;
     0)
         exit
